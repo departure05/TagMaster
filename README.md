@@ -2,11 +2,13 @@
 
 
 `TagMaster` brings tagging in Directory Opus to another level. It gives you an easy to use interface where you can manage them through a database, add them or remove them from files with a single click, plus edit descriptions and ratings. You can run it linked to your current file display selection or in a fuller standalone mode for batch work.
+
 <p align="center">
 <img width="1501" height="842" alt="Full Mode" src="https://github.com/user-attachments/assets/ac288269-d435-498c-953b-ca01f879d587" />
 
 <img width="407" height="664" alt="Linked Mode" src="https://github.com/user-attachments/assets/36c6dabf-921f-4562-a43f-adf2b2764ff1" />
 </p>
+
 ### Features
 * Global tag database for searching and reusing tags across files.
 * Cloud-like interface for tags with quick visual browsing and single-click add/remove.
