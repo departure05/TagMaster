@@ -4,14 +4,15 @@
 `TagMaster` brings tagging in Directory Opus to another level. It gives you an easy to use interface where you can manage them through a database, add them or remove them from files with a single click, plus edit descriptions and ratings. You can run it linked to your current file display selection or in a fuller standalone mode for batch work.
 
 <p align="center">
-<img width="1501" height="842" alt="Full Mode" src="https://github.com/user-attachments/assets/ac288269-d435-498c-953b-ca01f879d587" />
+<img width="1109" height="834" alt="full mode" src="https://github.com/user-attachments/assets/9ff13323-dd1e-44e8-afda-ebf237b3f279" />
 
-<img width="407" height="664" alt="Linked Mode" src="https://github.com/user-attachments/assets/36c6dabf-921f-4562-a43f-adf2b2764ff1" />
+<img width="407" height="664" alt="image" src="https://github.com/user-attachments/assets/5b31b74b-1834-40e7-be99-91a1e866d281" />
 </p>
 
 ### Features
 * Global tag database for searching and reusing tags across files.
 * Cloud-like interface for tags with quick visual browsing and single-click add/remove.
+* Support for categories and subcategories across your keywords.
 * Search field to find tags fast.
 * Bulk apply and "Add all" to tag many files at once.
 * Per-file description editor for short captions or notes.
@@ -22,6 +23,7 @@
 * Optional wildcard `FILTER` preselection for easy file management selection.
 * "No-block" concept applied when reading metadata. So you can cancel the command at any time instantly.
 * AutoTag: automated analysis for images and PDFs to generate suggested tags and a short description (read **About AutoTag** section).
+* AutoSort uncategorized tags: automated sorting for uncategorized keywords (read **About Categories** section).
 
 ### Requirements
 
@@ -29,7 +31,7 @@
 
 
 ### How to Install
-Download the file from releases and double click it. [Or follow the instructions](https://resource.dopus.com/t/how-to-use-buttons-and-scripts-from-this-forum/3546/2#p-145908-script-add-ins-4)
+Download the file from releases and double click it. [Or follow the instructions from here](https://resource.dopus.com/t/how-to-use-buttons-and-scripts-from-this-forum/3546/2#p-145908-script-add-ins-4)
 
 ### Usage
 Run the command by using `TagMaster`.
@@ -52,10 +54,13 @@ You can also add new tags that are not in the database. To do that, perform a se
 
 Click the Options icon (cog) in the tag database panel to access options:
 
-<img width="380" height="172" alt="Options menu" src="https://github.com/user-attachments/assets/3eff2d24-d38b-49d1-8dc2-df710e702474" />
+<p align="center">
+<img width="566" height="164" alt="image" src="https://github.com/user-attachments/assets/569919b6-6a22-4f0c-a169-c6802a4a8ea2" />
+</p>
 
 * Add Tags from items to database: By default, the script adds every tag it finds to your database. Disabling this option makes the database read-only.
 * Import from Opus database: Opus has its own tag database. This option lets you import it for use.
+* Auto sort Uncategorized: Automatically sort uncategorized keywords with IA. (more in **About Categories** section).
 
 ##### Setting rating
 
@@ -82,6 +87,10 @@ In `FULL` mode, if you try to close the dialog with unsaved changes, you will be
 If the `FILTER` argument is used, files will be filtered using Opus wildcard syntax, so only files matching the given pattern are included.
 In `FULL` mode, the filter is applied recursively to the contents of folders.
 
+##### Preview and Properties
+
+In `FULL` mode, you can see useful information about the selected files, and a preview. Use <kbd>F6</kbd> to change to Preview and <kbd>F7</kbd> to view the file properties.
+
 ### Command arguments
 
 Available arguments are:
@@ -107,6 +116,71 @@ Available arguments are:
 * The command is NOT meant for files where the path type is shell|mtp|ftp|plugin|zip.
 * Most strings in the configuration dialog depend on the current Opus language. Any strings not translated will appear in English for most users unless you run Opus in Spanish (Mexico).
 
+### About Categories
+
+v0.9.3b brings support for categories for keywords. The switch to that mode is automatic.
+To organize your database, (for now) you must edit the JSON file located at `/dopusdata\User Data\TagMaster\database.json`, using the following format:
+
+* Root object MUST contain a `categories` property (and may optionally contain `uncategorized`).
+* `categories` is a recursive structure (`categoryNode`):
+* If a `categoryNode` is an array, that array must contain strings (these are the keywords).
+* If a `categoryNode` is an object, its keys are subcategory names and each value must again be a `categoryNode` (so nesting can continue arbitrarily).
+* `uncategorized` is an optional top-level array of strings used for tags that didn't fit any category.
+* `Keys` (category names) are arbitrary non-empty strings, who shouldn't contain any of the following characters : $;\\;/;:;_
+
+Eg.
+```json
+{
+    "categories": {
+        "cat1": [
+      "tag1",
+      "tag2"
+    ],
+        "cat2": {
+            "cat2.1": {
+                "cat2.1.1": [
+          "tag3",
+          "tag4",
+          "tag5",
+          "tag6",
+          "tag7",
+          "tag8",
+          "tag9",
+          "tag10",
+          "tag11",
+          "tag12",
+          "tag13",
+          "tag14",
+          "tag15",
+          "tag16",
+          "tag17",
+          "tag18"
+        ],
+                "cat2.1.2": [
+          "tag7",
+          "tag8"
+        ]
+            },
+            "cat2.2": [
+        "tag5",
+        "tag6"
+      ]
+        }
+    },
+    "uncategorized": ["tag x", "tag y"]
+}
+```
+
+From now on, when the command "reads" new keywords, it will include them in the "Uncategorized" category.
+If you add keywords manually to the database, they will be added depending on the category currently selected. If the category is "All" or a "folder", they will be added to "Uncategorized".
+"All" shows the list of all registered keywords.
+
+It's also possible, if you have an AI model available, to use it to auto-sort keywords without a category. To do that, in FULL mode press the cog icon on the database control and choose the "Auto sort uncategorized" option.
+
+The model used will be the one currently configured as active in the selector next to the AI button.
+This method prevents the AI from inserting random new keywords. Depending on the model used, it may not be able to categorize all of them, but no keywords will be deleted (those without categories remain in "Uncategorized").
+When using this feature, a backup of the database is created first, so it's safe to revert if you don't agree with the changes.
+
 ### About AutoTagging
 
 When used in `FULL` mode, this command can use AI models (the most popular ones) to "understand" images and PDFs and suggest descriptions and tags.
@@ -115,18 +189,29 @@ Originally this script was intended for my personal use, and it was tightly inte
 
 As a workaround, this script includes several known models by default. To use them, you must have the corresponding API keys set in `environment variables`. This is common practice, so if you already have keys stored, you can use this feature (the variable names should be the standard ones, e.g. `OPENAI_API_KEY`). I'm not going to explain here how to obtain or store them in envvars, there's plenty of detailed info online.
 
-When the command starts it will detect if you have any keys installed and enable the corresponding models. In that case, when you select a single .png, .jpg, .webp, or .pdf file, the AI button is enabled. Next to it you can choose from several enabled models. **Note**: the file must be under 10 MB because it is sent base64-encoded to avoid creating a persistent object accessible by ID (and to avoid using the API to upload larger files).
+You have some extra AI-related configuration options. Click the Options button to open them.
+
+<p align="center">
+<img width="521" height="298" alt="image" src="https://github.com/user-attachments/assets/d5ca0fdc-aa64-45f1-abc8-73e70f9dbda0" />
+</p>
+
+There you can choose whether to resize images and set the maximum width and height. This helps avoid unnecessary load from very large images.
+You can also override settings like the response language; by default it uses Opus' current language. Enter a valid language name in English.
+
+
+When the command starts it will detect if you have any keys installed and enable the corresponding models. In that case, when you select a single image or .pdf file, the AI button is enabled. Next to it you can choose from several enabled models. 
 
 Once the request is made, the next window shows the results if there's a response.
 
+<p align="center">
 <img width="407" height="439" alt="AutoTag AI window" src="https://github.com/user-attachments/assets/92b0f8b3-2a8a-4053-8651-b56f933c82b6" />
+</p>
 
 Results can be edited, discarded, or accepted.
 
-
-
 **Note 1** : This script does NOT upload any file to AI service servers automatically, nor does it misuse your credits. If you use it, you are fully responsible for the content you send, which is why the process is intentionally manual.
-**Note 2** : Images are sent "as is", without resizing or metadata cleaning. This can be improved depending on user feedback (personally I use it for tasks where these parameters don't matter, so I didn't implement that).
+**Note 2** : Images that are not .jpg, .jpeg or .png are automatically converted to .png and resize it before sending.
+**Note 3** : Images are sent "as is", without any metadata cleaning. So be careful with what you send.
 
 The hardcoded models and the envvar they look for are:
 | Model              | ENV VAR | 
@@ -150,6 +235,7 @@ If you're interested, try the script and report edge cases or any suggestion you
 Currently the dialog are full translated to English and Spanish (Mexico). If you want to help to translate the dialog into your current language, feel free to send me a message.
 
 ### Credits / Acknowledgments
+
 * GPSoftware team for Directory Opus.
 
 ### Disclaimer
@@ -157,4 +243,6 @@ This is an independent project that uses third-party AI services and APIs.
 
 This project is not affiliated with, endorsed by, or sponsored by any of them.  
 All product and company names are trademarks or registered trademarks of their respective owners.
+
+
 
