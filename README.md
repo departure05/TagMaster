@@ -223,8 +223,75 @@ The hardcoded models and the envvar they look for are:
 |Gemini 3.0 Flash Preview | GOOGLE_API_KEY |
 |Gemini 3.0 Pro Preview | GOOGLE_API_KEY |
 |OpenAI 4.1 | OPENAI_API_KEY |
-|Gemini 2.0 (OpenRouter) | OPENROUTER_API_KEY | 
-|Gemma3 27B (OpenRouter) | OPENROUTER_API_KEY |
+
+### Autotag Notes:
+
+* Works identically to AutoTag in `FULL` mode, but separately and with multiple files.
+* Optimizes processing time by pre-anticipating conversions and requests (requests are made ahead of time and not only for the file currently visible in the dialog). This maximizes throughput.
+* In regular mode, it allows editing the obtained data as usual, as well as changing the model at runtime and redoing a request.
+* Unattended mode automates processing with the chosen parameters and requires sufficient credits for the selected model (use common sense regarding the number of files to process).
+* Some options accessible from the `FULL` mode Options dialog apply here, such as image conversion and the language to use.
+* Files that encounter errors during processing are sent to a collection for identification. Useful especially in unattended mode.
+* Consider this mode alpha: it may have bugs—please report them with reproducible steps.
+
+### Custom Models:
+
+Originally, this script allowed loading models through a UI. As of v0.9.5 this feature is partially restored.
+To add a new model, create a JSON file in `/dopusdata\User Data\custom models`.
+Each model file must be a valid JSON containing at least the following data (example for using Ollama - cloud is shown below).
+
+Note that placeholders are used to inject data into the JSON. Placeholders are: `__prompt__` (required), `__base64_file__` (required), `__schema__`, `__text_schema__`, and `__mime_type__`.
+The `data` value must be the same valid JSON structure the model expects for sending files encoded in base64. Consult the specific model's documentation to know this format. `text_data` contains information for sending/receiving text. Both are optional if the model doesn't support that input type—but at least one must exist.
+`response` holds an array that "leads" to the response in the JSON object the model returns. Consult the model's documentation for this.
+The model must also support structured outputs, which this command uses to obtain the response. The schemas for both cases are provided by the command and should not be part of the JSON; use the `__schema__` and `__text_schema__` placeholders instead.
+`modal_vision`, `modal_text`, `modal_audio`, `modal_video`, `modal_docs` indicate the input modalities the model accepts. For example, a model that supports image recognition should have `modal_vision` (required for this command).
+`api_name` should contain the name of the environment variable (DO NOT PLACE YOUR API KEY here). If the model does not require a key, use `no_api_needed`.
+If the model uses a key, `auth` must exist and must be an array of 2 values that will be sent as a header with the API key value. Most will use something like:
+['Authorization', 'Bearer ']; but other variations exist such as
+['x-goog-api-key', ''] ; in that case leave the second value empty.
+
+DO NOT USE the built-in model names, as they will be overridden.
+
+For Ollama, the command assumes Ollama is running at request time (it will not try to verify or launch the program).
+
+```json
+{
+	"name": "gemma3:27b-cloud 2",
+	"display_name": "Ollama Gemma3 27B cloud 2",
+	"api_name": "OLLAMA_API_KEY",
+	"endpoint": "https://ollama.com/v1/chat/completions",
+	"auth": ["Authorization", "Bearer "],
+	"model": "gemma3:27b-cloud",
+	"data": {
+		"model": "gemma3:27b-cloud",
+		"messages": [{
+			"role": "user",
+			"content": [{
+				"type": "text",
+				"text": "__prompt__"
+						}, {
+				"type": "image_url",
+				"image_url": "data:__mime_type__;base64,__base64_file__"
+						}]
+					}],
+		"response_format": {
+			"type": "json_schema",
+			"json_schema": {
+				"name": "keywords_and_desc",
+				"schema": "__schema__",
+				"strict": true
+			}
+		}
+	},
+	"response": ["choices", "0", "message", "content"],
+	"modal_vision": true,
+	"modal_text": false,
+	"modal_docs": false,
+	"modal_audio": false,
+	"modal_video": false,
+	"max_size": 10485760
+}
+```
 
 ### If you want to help
 
