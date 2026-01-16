@@ -4,9 +4,10 @@
 `TagMaster` brings tagging in Directory Opus to another level. It gives you an easy to use interface where you can manage them through a database, add them or remove them from files with a single click, plus edit descriptions and ratings. You can run it linked to your current file display selection or in a fuller standalone mode for batch work.
 
 <p align="center">
-<img width="1109" height="834" alt="full mode" src="https://github.com/user-attachments/assets/9ff13323-dd1e-44e8-afda-ebf237b3f279" />
+<img width="1109" height="834" alt="2026-01-15 20-03-47 Clipboard Image" src="https://github.com/user-attachments/assets/34d62b41-550d-41cc-941e-3c945113ecb4" />
 
-<img width="407" height="664" alt="image" src="https://github.com/user-attachments/assets/5b31b74b-1834-40e7-be99-91a1e866d281" />
+<img width="407" height="664" alt="2026-01-15 20-05-40 Clipboard Image" src="https://github.com/user-attachments/assets/40bd80bd-ecd7-472c-b4b1-886ebf5132d7" />
+
 </p>
 
 ### Features
@@ -27,7 +28,7 @@
 
 ### Requirements
 
-* Directory Opus 13.20 or newer.
+* Directory Opus 13.20.3 or newer.
 
 
 ### How to Install
@@ -38,7 +39,10 @@ Run the command by using `TagMaster`.
 
 By default the dialog `links` to the current selection: pick files in Opus and the panel shows their tags, description input, preview, and rating values. There's also the `FULL` mode dialog, who has more additions and where you can work with any passed file and drop files in to add them to the batch.
 
-In `FULL` mode, when folders are passed, they are read recursively. Otherwise they are ignored.
+In `FULL` mode, when folders are passed, they are read non-recursively by default (Use `RECURSIVE` to make it recursive). Otherwise they are ignored.
+
+In `AUTOTAG` mode, you can set the files you want to handle automatically using AI models. More details in the Autotag argument section.
+
 
 ##### Tagging
 
@@ -97,10 +101,19 @@ Available arguments are:
 
 | Argument  | Type | Value | Description                                                                                                         |
 | --------- | ---- | ----- | ------------------------------------------------------------------------------------------------------------------- |
-| FILES     | /K/M |       | Sets the files to act on in FULL mode. If no files are specified, the ones selected in the active tab will be used. |
-| FULL      | /S   |       | Open the command in FULL mode.                                                                                      |
+| FILES     | /M |       | Sets the files to act on in FULL and AUTOTAG mode. If no files are specified, the ones selected in the active tab will be used. |
+| AUTOTAG      | /O   |       | Open the command in AUTOTAG mode.                                                                                      |
+|       |    |  [model]     | Specify any model to start AUTOTAG. Can be a built-in model or a custom one                                                                                    |
+|       |    |  unattended     | Run AUTOTAG in unattended mode. This means there's no user intervention required.                                                                                     |
+|       |    |  nodesc     | When using AUTOTAG, the generated description will not be used.                                                                                    |
+|       |    |  notags     | When using AUTOTAG, the generated keywords will not be used.                                                                                    |
+|       |    |  nocats     | When using AUTOTAG, the generated categories will not be used.                                                                                    |
+| FULL      | /O   |       | Open the command in FULL mode.                                                                                      |
+|       |    |  ai     | Open the command in FULL mode with AI capabilities.                                                                                      |
 | FILTER    | /R   |       | Pass a pattern using Opus wildcard syntax.                                                                          |
 | NOADDTODB | /S   |       | Makes the command's tag database read-only.                                                                         |
+| RECURSIVE | /S   |       | When reading folders, lets you choose whether to do it recursively or not.                                                       |
+| MANAGE | /S   |       | Not yet implemented                                                       |
 
 ### Technical notes
 
@@ -111,7 +124,7 @@ Available arguments are:
   * AutoTagging using AI: Explained in the "About AutoTag" section.
 * Files marked as "online only" are ignored in all cases.
 * The command uses an in-memory cache to speed things up and optimize resources. Once a file is read, it stays cached while the command runs. It can also detect file changes and will automatically update its data.
-* Folders are read recursively in `FULL` mode, and the filter is applied if set.
+* Folders are read non-recursively in `FULL` mode (unless yo also use the `RECURSIVE` argument, and the filter is applied if set.
 * In `LINKED` mode you can also use a filter, though it's not recommended because it can be confusing if you don't fully understand how it works.
 * The command is NOT meant for files where the path type is shell|mtp|ftp|plugin|zip.
 * Most strings in the configuration dialog depend on the current Opus language. Any strings not translated will appear in English for most users unless you run Opus in Spanish (Mexico).
@@ -183,7 +196,9 @@ When using this feature, a backup of the database is created first, so it's safe
 
 ### About AutoTagging
 
-When used in `FULL` mode, this command can use AI models (the most popular ones) to "understand" images and PDFs and suggest descriptions and tags.
+This command can use AI models (the most popular ones) to "understand" images and PDFs and suggest descriptions and tags.
+
+`AUTOTAG` mode can be accessed from `FULL` mode when using the `ai` option (on the selected file), or as a standalone dialog that supports multiple files, invoked with the `AUTOTAG` argument.
 
 Originally this script was intended for my personal use, and it was tightly integrated with another add-in that, among other things, lets you manage models and their API keys. Since that other script isn't finished, this one lacks a UI for managing models and API keys.
 
@@ -204,7 +219,8 @@ When the command starts it will detect if you have any keys installed and enable
 Once the request is made, the next window shows the results if there's a response.
 
 <p align="center">
-<img width="407" height="439" alt="AutoTag AI window" src="https://github.com/user-attachments/assets/92b0f8b3-2a8a-4053-8651-b56f933c82b6" />
+<img width="808" height="569" alt="2026-01-15 20-02-33 Clipboard Image" src="https://github.com/user-attachments/assets/cb062a7f-bf7b-4ef4-9366-fcc2df69787b" />
+
 </p>
 
 Results can be edited, discarded, or accepted.
@@ -216,15 +232,13 @@ Results can be edited, discarded, or accepted.
 The hardcoded models and the envvar they look for are:
 | Model              | ENV VAR | 
 |--------------------| ----------------|
-|Mistral Pixtral 12B | MISTRAL_API_KEY |
-|Mistral Pixtral Large | MISTRAL_API_KEY |
-|Gemini 2.5 Flash | GOOGLE_API_KEY |
-|Gemini 2.5 Flash Lite | GOOGLE_API_KEY |
-|Gemini 3.0 Flash Preview | GOOGLE_API_KEY |
-|Gemini 3.0 Pro Preview | GOOGLE_API_KEY |
-|OpenAI 4.1 | OPENAI_API_KEY |
+|Mistral Models | MISTRAL_API_KEY |
+|Gemini Models | GOOGLE_API_KEY |
+|OpenAI Models | OPENAI_API_KEY |
 
-### Autotag Notes:
+Starting with v0.9.5, you can also bring your own custom models, like add-ons, and use them directly without modifying the script add-in. More details are available in the Custom Models section.
+
+### Autotag argument:
 
 * Works identically to AutoTag in `FULL` mode, but separately and with multiple files.
 * Optimizes processing time by pre-anticipating conversions and requests (requests are made ahead of time and not only for the file currently visible in the dialog). This maximizes throughput.
@@ -256,40 +270,40 @@ For Ollama, the command assumes Ollama is running at request time (it will not t
 
 ```json
 {
-	"name": "gemma3:27b-cloud 2",
-	"display_name": "Ollama Gemma3 27B cloud 2",
-	"api_name": "OLLAMA_API_KEY",
-	"endpoint": "https://ollama.com/v1/chat/completions",
-	"auth": ["Authorization", "Bearer "],
-	"model": "gemma3:27b-cloud",
-	"data": {
-		"model": "gemma3:27b-cloud",
-		"messages": [{
-			"role": "user",
-			"content": [{
-				"type": "text",
-				"text": "__prompt__"
-						}, {
-				"type": "image_url",
-				"image_url": "data:__mime_type__;base64,__base64_file__"
-						}]
-					}],
-		"response_format": {
-			"type": "json_schema",
-			"json_schema": {
-				"name": "keywords_and_desc",
-				"schema": "__schema__",
-				"strict": true
-			}
-		}
-	},
-	"response": ["choices", "0", "message", "content"],
-	"modal_vision": true,
-	"modal_text": false,
-	"modal_docs": false,
-	"modal_audio": false,
-	"modal_video": false,
-	"max_size": 10485760
+  "name": "gemma3:27b-cloud 2",
+  "display_name": "Ollama Gemma3 27B cloud 2",
+  "api_name": "OLLAMA_API_KEY",
+  "endpoint": "https://ollama.com/v1/chat/completions",
+  "auth": ["Authorization", "Bearer "],
+  "model": "gemma3:27b-cloud",
+  "data": {
+    "model": "gemma3:27b-cloud",
+    "messages": [{
+      "role": "user",
+      "content": [{
+        "type": "text",
+        "text": "__prompt__"
+            }, {
+        "type": "image_url",
+        "image_url": "data:__mime_type__;base64,__base64_file__"
+            }]
+          }],
+    "response_format": {
+      "type": "json_schema",
+      "json_schema": {
+        "name": "keywords_and_desc",
+        "schema": "__schema__",
+        "strict": true
+      }
+    }
+  },
+  "response": ["choices", "0", "message", "content"],
+  "modal_vision": true,
+  "modal_text": false,
+  "modal_docs": false,
+  "modal_audio": false,
+  "modal_video": false,
+  "max_size": 10485760
 }
 ```
 
